@@ -10,7 +10,9 @@
                 color: white;
             }
         </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script type="text/javascript">
+        /*
             window.onmousedown = window.onkeydown = function() {
                 document.body.style.backgroundColor = "white"
                 document.getElementById("list").style.color = "black"
@@ -19,20 +21,21 @@
                 document.body.style.backgroundColor = "black"
                 document.getElementById("list").style.color = "white"
             }
+            */
             $(document).ready(function() {
-                $(document).vmousedown(function() {
+                $(document).on('touchstart', function() {
                     document.body.style.backgroundColor = "white"
                     document.getElementById("list").style.color = "black"
-                })
-                $(document).vmouseup(function() {
-                    document.body.style.backgroundColor = "black"
-                    document.getElementById("list").style.color = "white"
-                })
-            })
+                });
+                $(document).on('touchend', function() {
+                    document.body.style.backgroundColor = "white"
+                    document.getElementById("list").style.color = "black"
+                });
+            });
         </script>
     </head>
     <body>
-        <pre id="list">
+        <pre id="list" style="display:none;">
 
     a : .-          0 : -----
     b : -...        1 : .----
@@ -60,6 +63,5 @@
     x : -..-
     y : -.--
     z : --..</pre>
-        <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
     </body>
 </html>
