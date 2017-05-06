@@ -22,9 +22,9 @@ var game = new Phaser.Game(800, 700, Phaser.AUTO, 'game', { preload: preload, cr
 
 function preload() {
     // load assets
-    game.load.image('rocket', '../assets/rocket.png');
-    game.load.image('planetred', '../assets/planetred.png');
-    game.load.image('planetgreen', '../assets/planetgreen.png');
+    game.load.image('rocket', '/assets/rocket.png');
+    game.load.image('planetred', '/assets/planetred.png');
+    game.load.image('planetgreen', '/assets/planetgreen.png');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
