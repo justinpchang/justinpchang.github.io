@@ -5,10 +5,11 @@
  *************************************/
 
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
-const BUFFER_ZONE = 400; // distance the rocket can stray from the bounds
+const BUFFER_ZONE = 200; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
 const THRUST = .1;
-const PLANET_MASS = 1135;
+const PLANET_MASS = 1300; // 800-1500
+const FUEL_INTERVAL = 5; // every fifth planet
 
 var rocket;
 var planets;
@@ -18,13 +19,15 @@ var bgGroup; // group of squares for background asteroids
 var circles; // graphics object for drawing proximity circles around planets
 
 // create the game
-var game = new Phaser.Game(800, 700, Phaser.AUTO, 'game', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
 function preload() {
     // load assets
-    game.load.image('rocket', '/assets/rocket.png');
-    game.load.image('planetred', '/assets/planetred.png');
-    game.load.image('planetgreen', '/assets/planetgreen.png');
+    game.load.image('rocketon', 'assets/rocketon.png');
+    game.load.image('rocketoff', 'assets/rocketoff.png');
+    game.load.image('planetred', 'assets/planetred.png');
+    game.load.image('planetgreen', 'assets/planetgreen.png');
+    game.load.image('planetfuel', 'assets/planetfuel.png');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
@@ -76,6 +79,19 @@ function create() {
     var gameOverStyle = { font: "50px Arial", fill: "#ff0044", align: "center" };
     this.gameOver = game.add.text(game.world.centerX, game.world.centerY, "", gameOverStyle);
     this.gameOver.anchor.set(0.5);
+
+    // create the fuel bar (using HealthBar.js plugin)
+    var barConfig = {
+        x: game.width * .5,
+        y: game.height - 20,
+        width: 300,
+        height: 25,
+        animationDuration: 1
+    }
+    this.fuelBar = new HealthBar(this.game, barConfig);
+    var fuelStyle = { font: "15px Arial", fill: "#ff0044", align: "left" };
+    this.fuelLabel = game.add.text(game.width * .5 - 140, game.height - 25, "Fuel: 100%", fuelStyle);
+    this.fuelLevel = 100;
 }
 
 function update() {
@@ -99,16 +115,28 @@ function update() {
     this.velocity = this.velocity.add(accelerations[0]).add(accelerations[1]);
 
     // add thrust in forward direction of velocity
-    if(this.keys.up.isDown) { // forward thrust
-        var unitVector = this.velocity.getUnitVector().getComponents();
-        this.velocity = this.velocity.add(new Vector(
-            THRUST * unitVector[0],
-            THRUST * unitVector[1]));
-    } else if(this.keys.down.isDown) { // backward thrust
-        var unitVector = this.velocity.getUnitVector().getComponents();
-        this.velocity = this.velocity.add(new Vector(
-            -1 * THRUST * unitVector[0],
-            -1 * THRUST * unitVector[1]));
+    if(this.fuelLevel > 0) {
+        if(this.keys.up.isDown) { // forward thrust
+            var unitVector = this.velocity.getUnitVector().getComponents();
+            this.velocity = this.velocity.add(new Vector(
+                THRUST * unitVector[0],
+                THRUST * unitVector[1]));
+            if(this.fuelLevel > 0) {
+                this.fuelLevel -= .3;
+            }
+            rocket.loadTexture('rocketon');
+        } else if(this.keys.down.isDown) { // backward thrust
+            var unitVector = this.velocity.getUnitVector().getComponents();
+            this.velocity = this.velocity.add(new Vector(
+                -1 * THRUST * unitVector[0],
+                -1 * THRUST * unitVector[1]));
+            if(this.fuelLevel > 0) {
+                this.fuelLevel -= .3;
+            }
+            rocket.loadTexture('rocketon');
+        } else {
+            rocket.loadTexture('rocketoff'); // THIS CAN BE OPTIMIZED
+        }
     }
 
     // increment position of rocket
@@ -125,27 +153,37 @@ function update() {
     rocket.rotation = this.direction;
 
     // check if rocket has hit planet
-    if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {
-        // pause the game and display game over text
+    if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {    // pause the game and display game over text
         game.paused = true;
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
 
     // check if within proximity of planet
     if(calculateDistance(planets[0]) && (curPlanetIndex === 2 || curPlanetIndex != 0)) {
+        // check if fuel planet
+        if(score % FUEL_INTERVAL == 0) {
+            if(this.fuelLevel <= 50) {
+                this.fuelLevel += 50;
+            } else {
+                this.fuelLevel = 100;
+            }
+        }
+
         curPlanetIndex = 0;
         planets[0].changeColor();
         // replace planet 2
         planets[1].destroy();
         // find good x and y (OPTIMIZE THIS)
-        nx = getRandomInt(100, game.width - 100);
-        ny = getRandomInt(100, game.height - 100);
+        var nx = getRandomInt(100, game.width - 100);
+        var ny = getRandomInt(100, game.height - 100);
         while(Math.abs(nx - planets[0].getX()) + Math.abs(ny - planets[0].getY()) < 400) {
             nx = getRandomInt(100, game.width - 100);
             ny = getRandomInt(100, game.height - 100);
         }
-        mass = PLANET_MASS;
-        planets[1] = new Planet(game, nx, ny, mass);
+        var mass = getRandomInt(800, 1500);
+        console.log(score);
+        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
+        planets[1] = new Planet(game, nx, ny, mass, fuel);
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
@@ -156,19 +194,30 @@ function update() {
         circles.lineStyle(0, 0xFF00FF);
     }
     if(calculateDistance(planets[1]) && (curPlanetIndex === 2 || curPlanetIndex != 1)) {
+        // check if fuel planet
+        if(score % FUEL_INTERVAL == 0) {
+            if(this.fuelLevel <= 50) {
+                this.fuelLevel += 50;
+            } else {
+                this.fuelLevel = 100;
+            }
+        }
+
         curPlanetIndex = 1;
         planets[1].changeColor();
         // replace planet 1
         planets[0].destroy();
         // find good x and y
-        nx = getRandomInt(100, game.width - 100);
-        ny = getRandomInt(100, game.height - 100);
+        var nx = getRandomInt(100, game.width - 100);
+        var ny = getRandomInt(100, game.height - 100);
         while(Math.abs(nx - planets[1].getX()) + Math.abs(ny - planets[1].getY()) < 400) {
             nx = getRandomInt(100, game.width - 100);
             ny = getRandomInt(100, game.height - 100);
         }
-        mass = PLANET_MASS;
-        planets[0] = new Planet(game, nx, ny, mass);
+        var mass = getRandomInt(800, 1500);
+        console.log(score);
+        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
+        planets[0] = new Planet(game, nx, ny, mass, fuel);
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
@@ -180,11 +229,14 @@ function update() {
     }
 
     // check bounds
-    if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {
-        // pause the game and display game over text
+    if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {    // pause the game and display game over text
         game.paused = true;
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
+
+    // update fuel bar
+    this.fuelBar.setPercent(this.fuelLevel);
+    this.fuelLabel.setText("Fuel: " + Math.floor(this.fuelLevel) + "%");
 }
 
 function render() {
