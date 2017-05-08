@@ -72,6 +72,9 @@ function create() {
     // add key input to the game
     this.keys = game.input.keyboard.createCursorKeys();
 
+    // add touch input
+    game.input.addPointer();
+
     // create text for score in bottom left
     var scoreStyle = { font: "20px Arial", fill: "#ff0044", align: "left" };
     this.score = game.add.text(25, game.height - 25, "Score: " + score, scoreStyle);
@@ -117,7 +120,7 @@ function update() {
 
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0) {
-        if(this.keys.up.isDown) { // forward thrust
+        if(this.keys.up.isDown || game.input.pointer1.x >= game.centerX) { // forward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 THRUST * unitVector[0],
@@ -126,7 +129,7 @@ function update() {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown) { // backward thrust
+        } else if(this.keys.down.isDown || game.input.pointer1.x < game.centerX) { // backward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 -1 * THRUST * unitVector[0],
@@ -248,7 +251,7 @@ function update() {
 
 function render() {
     // display info about the rocket
-    //game.debug.spriteInfo(rocket, 32, 32);
+    game.debug.spriteInfo(rocket, 32, 32);
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
