@@ -120,7 +120,7 @@ function update() {
 
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0) {
-        if(this.keys.up.isDown || game.input.pointer1.isDown && game.input.pointer1.x >= game.width * 0.5) { // forward thrust
+        if(this.keys.up.isDown || game.input.pointer1.isDown && game.input.x >= game.width * 0.5) { // forward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 THRUST * unitVector[0],
@@ -129,7 +129,7 @@ function update() {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown || game.input.pointer1.isDown && game.input.pointer1.x < game.width * 0.5) { // backward thrust
+        } else if(this.keys.down.isDown || game.input.pointer1.isDown && game.input.x < game.width * 0.5) { // backward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 -1 * THRUST * unitVector[0],
@@ -252,7 +252,7 @@ function update() {
 function render() {
     // display info about the rocket
     //game.debug.spriteInfo(rocket, 32, 32);
-    game.debug.text(game.input.pointer1.x, 2, 30, "#00ff00");
+    game.debug.text(game.input.pointer1.x || 'xx', 2, 30, "#00ff00");
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
