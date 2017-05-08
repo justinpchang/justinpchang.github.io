@@ -273,7 +273,7 @@ function update() {
         planets[1].setX(100);
         planets[1].setY(200);
         planets[1].setMass(PLANET_MASS);
-        planets[1].setColorGreen();
+        planets[1].changeColorGreen();
 
         // remake proximity circles
         circles.destroy();
