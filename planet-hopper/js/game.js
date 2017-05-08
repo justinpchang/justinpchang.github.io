@@ -251,7 +251,8 @@ function update() {
 
 function render() {
     // display info about the rocket
-    game.debug.spriteInfo(rocket, 32, 32);
+    //game.debug.spriteInfo(rocket, 32, 32);
+    game.debug.text(game.input.x || '--', 2, 40, "#00ff00");
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
