@@ -19,9 +19,10 @@ var bgGroup; // group of squares for background asteroids
 var circles; // graphics object for drawing proximity circles around planets
 
 // create the game
-var game = new Phaser.Game(800, 700, Phaser.AUTO, 'game', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
 function preload() {
+    game.forceSingleUpdate = true;
     // load assets
     game.load.image('rocketon', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAfUlEQVRYhe3VsQ2AMBADwJ+BxViIIiWrpWOjpwKliCUeeAVhW3ITKTl3MQtmWyfvNfpOOBwwwtJHcMO11m4F304pxY9G4fauYMGCyWGEoQoW/E04iqEKFjwWfgsLj+CAszE4gg9G4fudhsFtfDY/uzQF548wbvjKiBTsV/AO3DCi7ESmZbwAAAAASUVORK5CYII=');
     game.load.image('rocketoff', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAaklEQVRYhe3VsQ3AIBBDUWZg4iuz2nVsBFWkFLhwFASR/SWX4V2XUsjaVfts7Dt0GjDClh+hDWfmdIZfFxH9Hgs/vzVs2LA4jDA0w4bPhFkMzbDhvfBXGH2EBrwag0fowSi9v9M22LnfNgB+8SHvtb/YqAAAAABJRU5ErkJggg==');
@@ -70,6 +71,12 @@ function create() {
 
     // add key input to the game
     this.keys = game.input.keyboard.createCursorKeys();
+    this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    this.downKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    this.restartKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
+
+    // add touch input
+    game.input.addPointer();
 
     // create text for score in bottom left
     var scoreStyle = { font: "20px Arial", fill: "#ff0044", align: "left" };
@@ -116,7 +123,7 @@ function update() {
 
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0) {
-        if(this.keys.up.isDown) { // forward thrust
+        if(this.keys.up.isDown || this.upKey.isDown) { // forward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 THRUST * unitVector[0],
@@ -125,7 +132,7 @@ function update() {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown) { // backward thrust
+        } else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 -1 * THRUST * unitVector[0],
@@ -154,7 +161,9 @@ function update() {
 
     // check if rocket has hit planet
     if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {    // pause the game and display game over text
-        game.paused = true;
+        this.velocity = new Vector(0, 0);
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
 
@@ -170,9 +179,7 @@ function update() {
         }
 
         curPlanetIndex = 0;
-        planets[0].changeColor();
-        // replace planet 2
-        planets[1].destroy();
+        planets[0].changeColorRed();
         // find good x and y (OPTIMIZE THIS)
         var nx = getRandomInt(100, game.width - 100);
         var ny = getRandomInt(100, game.height - 100);
@@ -181,9 +188,14 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
-        console.log(score);
-        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
-        planets[1] = new Planet(game, nx, ny, mass, fuel);
+        planets[1].setX(nx);
+        planets[1].setY(ny);
+        planets[1].setMass(mass);
+        if(score % FUEL_INTERVAL == 4 && score != 0) {
+            planets[1].makeFuelPlanet();
+        } else {
+            planets[1].changeColorGreen();
+        }
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
@@ -204,9 +216,7 @@ function update() {
         }
 
         curPlanetIndex = 1;
-        planets[1].changeColor();
-        // replace planet 1
-        planets[0].destroy();
+        planets[1].changeColorRed();
         // find good x and y
         var nx = getRandomInt(100, game.width - 100);
         var ny = getRandomInt(100, game.height - 100);
@@ -215,9 +225,14 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
-        console.log(score);
-        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
-        planets[0] = new Planet(game, nx, ny, mass, fuel);
+        planets[0].setX(nx);
+        planets[0].setY(ny);
+        planets[0].setMass(mass);
+        if(score % FUEL_INTERVAL == 4 && score != 0) {
+            planets[0].makeFuelPlanet();
+        } else {
+            planets[0].changeColorGreen();
+        }
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
@@ -230,13 +245,53 @@ function update() {
 
     // check bounds
     if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {    // pause the game and display game over text
-        game.paused = true;
+        this.velocity = new Vector(0, 0);
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
 
     // update fuel bar
     this.fuelBar.setPercent(this.fuelLevel);
     this.fuelLabel.setText("Fuel: " + Math.floor(this.fuelLevel) + "%");
+
+    // check if restart game
+    if(this.restartKey.isDown) {
+        // reset rocket
+        rocket.x = 350;
+        rocket.y = 400;
+
+        // reset movement variables
+        this.velocity = new Vector(0, -1);
+        this.direction = 0;
+
+        // create first two planets
+        planets[0].setX(500);
+        planets[0].setY(300);
+        planets[0].setMass(PLANET_MASS);
+        planets[0].changeColorGreen();
+        planets[1].setX(100);
+        planets[1].setY(200);
+        planets[1].setMass(PLANET_MASS);
+        planets[1].setColorGreen();
+
+        // remake proximity circles
+        circles.destroy();
+        circles = game.add.graphics(0, 0);
+        circles.lineStyle(1, 0xFF00FF);
+        circles.drawCircle(planets[0].x, planets[0].y, 100);
+        circles.drawCircle(planets[1].x, planets[1].y, 100);
+        circles.lineStyle(0, 0xFF00FF);
+
+        // reset score
+        score = 0;
+
+        // reset fuel bar
+        this.fuelLevel = 100;
+
+        // take out game over message
+        this.gameOver.setText("");
+    }
 }
 
 function render() {
