@@ -47364,7 +47364,8 @@ Phaser.Loader.prototype = {
                 {
                     file.data.crossOrigin = this.crossOrigin;
                 }
-                file.data.src = this.baseURL + file.url;
+                file.data.src = file.url;
+                //file.data.src = this.baseURL + file.url;
                 break;
 
             case 'audio':
