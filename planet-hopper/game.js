@@ -19,7 +19,7 @@ var bgGroup; // group of squares for background asteroids
 var circles; // graphics object for drawing proximity circles around planets
 
 // create the game
-var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 700, Phaser.AUTO, 'game', { preload: preload, create: create, update: update, render: render});
 
 function preload() {
     // load assets
@@ -241,7 +241,7 @@ function update() {
 
 function render() {
     // display info about the rocket
-    game.debug.spriteInfo(rocket, 32, 32);
+    //game.debug.spriteInfo(rocket, 32, 32);
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
