@@ -71,6 +71,9 @@ function create() {
 
     // add key input to the game
     this.keys = game.input.keyboard.createCursorKeys();
+    this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    this.downKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    this.restartKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
 
     // add touch input
     game.input.addPointer();
@@ -120,7 +123,7 @@ function update() {
 
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0) {
-        if(this.keys.up.isDown || game.input.pointer1.isDown && game.input.x >= game.width * 0.5) { // forward thrust
+        if(this.keys.up.isDown || this.upKey.isDown) { // forward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 THRUST * unitVector[0],
@@ -129,7 +132,7 @@ function update() {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown || game.input.pointer1.isDown && game.input.x < game.width * 0.5) { // backward thrust
+        } else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
                 -1 * THRUST * unitVector[0],
@@ -158,7 +161,9 @@ function update() {
 
     // check if rocket has hit planet
     if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {    // pause the game and display game over text
-        game.paused = true;
+        this.velocity = new Vector(0, 0);
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
 
@@ -240,19 +245,58 @@ function update() {
 
     // check bounds
     if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {    // pause the game and display game over text
-        game.paused = true;
+        this.velocity = new Vector(0, 0);
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
 
     // update fuel bar
     this.fuelBar.setPercent(this.fuelLevel);
     this.fuelLabel.setText("Fuel: " + Math.floor(this.fuelLevel) + "%");
+
+    // check if restart game
+    if(this.restartKey.isDown) {
+        // reset rocket
+        rocket.x = 350;
+        rocket.y = 400;
+
+        // reset movement variables
+        this.velocity = new Vector(0, -1);
+        this.direction = 0;
+
+        // create first two planets
+        planets[0].setX(500);
+        planets[0].setY(300);
+        planets[0].setMass(PLANET_MASS);
+        planets[0].changeColorGreen();
+        planets[1].setX(100);
+        planets[1].setY(200);
+        planets[1].setMass(PLANET_MASS);
+        planets[1].setColorGreen();
+
+        // remake proximity circles
+        circles.destroy();
+        circles = game.add.graphics(0, 0);
+        circles.lineStyle(1, 0xFF00FF);
+        circles.drawCircle(planets[0].x, planets[0].y, 100);
+        circles.drawCircle(planets[1].x, planets[1].y, 100);
+        circles.lineStyle(0, 0xFF00FF);
+
+        // reset score
+        score = 0;
+
+        // reset fuel bar
+        this.fuelLevel = 100;
+
+        // take out game over message
+        this.gameOver.setText("");
+    }
 }
 
 function render() {
     // display info about the rocket
     //game.debug.spriteInfo(rocket, 32, 32);
-    game.debug.text(game.input.pointer1.x || 'xx', 2, 30, "#00ff00");
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
