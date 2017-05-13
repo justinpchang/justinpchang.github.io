@@ -10,10 +10,10 @@ const UNIT_J = new Vector(0, -1);
 const THRUST = .06;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
-const FUEL_USE = 0.05;
-const TURNING_SPEED = 0.04;
+const FUEL_USE = 0.15;
+const TURNING_SPEED = 0.07;
 const SLOW_MOTION = 0.4;
-const LANDING_SPEED = 10;
+const LANDING_SPEED = 14;
 
 var rocket;
 var miniRocket;
@@ -28,6 +28,9 @@ var gameOver = false;
 var speed;
 var isLanded = false;
 var landedPlanet = 0;
+var lastLandingVelocity;
+var landingPlanetMass;
+var storedPlanet;
 
 // create the game
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
@@ -86,14 +89,14 @@ function create() {
 
     // create planets and sun
     planets = [];
-    planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, 250, 750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 750, 250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(1000, 2000)));
     stars = [];
     star = new Planet(game, 1000, 1000, 3000);
     star.makeStar();
@@ -171,14 +174,16 @@ function update() {
         r = Math.abs(Math.hypot(dx, dy));
         theta = Math.atan(dy / dx);
         mag = calculateGravity(planets[i].getMass(), r);
-        if(rocket.getX() < planets[i].getX()) {
-            accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
-        } else {
-            accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
+        if(!isLanded) {
+            if(rocket.getX() < planets[i].getX()) {
+                accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
+            } else {
+                accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
+            }
         }
 
         // check if rocket has hit planet
-        if(planets[i].isOverlapping(rocket.getX(), rocket.getY())) {
+        if(planets[i].isOverlapping(rocket.getX(), rocket.getY()) && !isLanded) {
             if(rocket.getVelocity().getMagnitude() < LANDING_SPEED) { // slow enough to land
                 if(i === targetPlanet) { // correct planet
                     planets[i].changeColorGreen();
@@ -190,11 +195,15 @@ function update() {
                     targetPlanet = target;
                     planets[targetPlanet].changeColorRed();
                     score++;
+                    this.score.setText("Score: " + score);
                 } //else {
                     // land regularly
                     isLanded = true;
-                    planets[i].endGameState();
                     landedPlanet = i;
+                    storedPlanet = planets[landedPlanet].getMass();
+                    lastLandingVelocity = rocket.getVelocity();
+                    planets[landedPlanet].endGameState();
+                    accelerations = new Array();
                     rocket.setVelocity(new Vector(0, 0));
                 //}
             } else { // crashed
@@ -210,14 +219,16 @@ function update() {
 
     // check if landed and need to launch
     if(this.spaceKey.isDown && isLanded) {
-        // reset rocket
-        rocket.setX(500);
-        rocket.setY(500);
-        // reset movement variables
-        rocket.setVelocity(new Vector(0, 0));
-        rocket.setDirection(0)
-        // set planet back to normal
-        planets[landedPlanet].setMass(getRandomInt(800, 1500));
+        rocket.setX(rocket.getX() + (rocket.getX() - planets[landedPlanet].getX()) * 2);
+        rocket.setY(rocket.getY() + (rocket.getY() - planets[landedPlanet].getY()) * 2);
+        rocket.setVelocity(new Vector(lastLandingVelocity.getComponents()[0] * -.5, lastLandingVelocity.getComponents()[1] * -.5));
+        planets[landedPlanet].setMass(storedPlanet);
+        if(this.fuelLevel <= 50) {
+            this.fuelLevel += 50;
+        } else {
+            this.fuelLevel = 100;
+        }
+        isLanded = false;
     }
 
     for(var i = 0; i < stars.length; i++) {
@@ -227,10 +238,12 @@ function update() {
         r = Math.abs(Math.hypot(dx, dy));
         theta = Math.atan(dy / dx);
         mag = calculateGravity(stars[i].getMass(), r);
-        if(rocket.getX() < stars[i].getX()) {
-            accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
-        } else {
-            accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
+        if(isLanded === false) {
+            if(rocket.getX() < stars[i].getX()) {
+                accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
+            } else {
+                accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
+            }
         }
 
         // check if rocket has hit star
@@ -245,7 +258,7 @@ function update() {
     }
 
     // add thrust in forward direction of velocity
-    if(this.fuelLevel > 0 && gameOver == false && this.fuelLevel > 0 && (this.keys.up.isDown || this.upKey.isDown)) {
+    if(this.fuelLevel > 0 && gameOver == false && this.fuelLevel > 0 && (this.keys.up.isDown || this.upKey.isDown) && isLanded == false) {
         var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
         rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
         this.fuelLevel -= FUEL_USE;
@@ -255,7 +268,7 @@ function update() {
     }
 
     // turn rocket (uses 1/3rd the fuel of forward thrust)
-    if(this.fuelLevel > 0 && gameOver == false) {
+    if(this.fuelLevel > 0 && gameOver == false && isLanded == false) {
         if(this.keys.left.isDown || this.leftKey.isDown) {
             rocket.setDirection(rocket.getDirection() - TURNING_SPEED);
             this.fuelLevel -= FUEL_USE / 3;
@@ -368,6 +381,8 @@ function update() {
 
     // check if restart game
     if(this.restartKey.isDown) {
+        isLanded = false;
+
         // reset rocket
         rocket.setX(500);
         rocket.setY(500);
@@ -383,14 +398,14 @@ function update() {
 
         // create first two planets
         planets = [];
-        planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, 250, 750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 750, 250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(1000, 2000)));
         stars = [];
         star = new Planet(game, 1000, 1000, 2700);
         star.makeStar();

@@ -2,7 +2,7 @@ class Planet {
     constructor(game, x, y, mass) {
         this.x = x;
         this.y = y;
-        this.mass = mass - 100;
+        this.mass = mass;
         this.game = game;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
