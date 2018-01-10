@@ -420,6 +420,8 @@ function update() {
             stars[i].changeMiniYellow();
         }
 
+        score = 0;
+
         // remake proximity circles
         /*
         circles.destroy();
