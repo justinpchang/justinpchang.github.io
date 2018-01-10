@@ -8,7 +8,7 @@ const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
 const THRUST = .06;
-const PLANET_MASS = 1300; // 800-1500
+const PLANET_MASS = 1500; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
 const FUEL_USE = 0.15;
 const TURNING_SPEED = 0.07;
@@ -98,7 +98,7 @@ function create() {
     planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(1000, 2000)));
     planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(1000, 2000)));
     stars = [];
-    star = new Planet(game, 1000, 1000, 3000);
+    star = new Planet(game, 1000, 1000, 4000);
     star.makeStar();
     stars.push(star);
 
