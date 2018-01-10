@@ -420,8 +420,6 @@ function update() {
             stars[i].changeMiniYellow();
         }
 
-        score = 0;
-
         // remake proximity circles
         /*
         circles.destroy();
@@ -434,6 +432,7 @@ function update() {
 
         // reset score
         score = 0;
+        this.score.setText("Score: " + score);
 
         // reset fuel bar
         this.fuelLevel = 100;
