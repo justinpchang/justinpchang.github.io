@@ -3,19 +3,17 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Party Quest</title>
+    <title>Unity WebGL Player | Party Quest</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <script src="TemplateData/UnityProgress.js"></script>
     <script src="Build/UnityLoader.js"></script>
     <script>
       var gameInstance = UnityLoader.instantiate("gameContainer", "Build/WebGL_demo.json", {onProgress: UnityProgress});
+      alert("Control the 3 characters with A, S, and D. Control the camera by pushing the edges with the mouse or with the arrow keys.");
     </script>
   </head>
   <body>
-    <h3>'A' to move blue dude</h3>
-    <h3>'S' to move green dude</h3>
-    <h3>'D' to move red dude</h3>
     <div class="webgl-content">
       <div id="gameContainer" style="width: 960px; height: 600px"></div>
       <div class="footer">
