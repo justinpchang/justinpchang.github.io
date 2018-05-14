@@ -32,7 +32,7 @@ function findSubstrings(str) {
     for(j = i + 2; j < str.length + 1; j++) {
       // Test all substrings of size > 1
       cur_str = str.substring(i, j);
-      if(hasRepeat(cur_str)) substrs.push(cur_str);
+      if(hasRepeat(cur_str.toLowerCase())) substrs.push(cur_str);
     }
   }
   return substrs;
