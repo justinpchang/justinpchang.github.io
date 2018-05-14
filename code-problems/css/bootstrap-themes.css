@@ -3,8 +3,10 @@
 
 .btn-mail {
   line-height: 1.0;
-  background-color: #bcc1c9;
-}
+  background-color: #bcc1c9; }
+
+.desc-text {
+  text-align: left; }
 
 .ht-dl-modal-backdrop {
   position: fixed;
