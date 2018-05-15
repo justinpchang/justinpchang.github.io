@@ -9,6 +9,8 @@ $(document).ready(function() {
   var is_safari = navigator.userAgent.indexOf("Safari") > -1;
   if ((is_chrome)&&(is_safari)) {is_safari=false;}
 
+  if(is_safari) alert("It appears you're using Safari. Mixed content is blocked by default. Please enable the 'Ask before sending' setting in the Security tab or use a different browser.");
+
   if  (typeof isDarkTheme == 'undefined') {
     isDarkTheme = false;
   }
