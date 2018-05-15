@@ -78,6 +78,6 @@ function createTableRow(msg_encoded, msg_decoded) {
  * Clear table of messages
  */
 function clear_log() {
-  tr_count = 1;
-  $("#log-body").empty();
+  tr_count = 2;
+  $("#log-body").html("<tr><th scope=\"row\">1</th><td>05/14/18<br />09:31</td><td>29 14 41 0 34 22 7 68 11 22 35 4 7 56 21 30 4 22 64 34 0 30 22 14 47 4 68 15 22 30 12 64 45 4 22 35 4 7 56 21 30 4 22 64 34 22 58 56 5 5 4 41 4 60 39</td><td>Don't cry because it's over, smile because it happened.</td></tr>");
 }
