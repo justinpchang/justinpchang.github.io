@@ -1062,3 +1062,13 @@ body.ht-tm-neon-glow .ht-navbar-wrapper {
 
 .hljs-emphasis {
   font-style: italic; }
+
+#submit-string {
+  width: 10em;
+  float: left;
+  white-space:nowrap;
+  overflow: hidden; }
+
+#submit-string-btn {
+  white-space:nowrap;
+  float: right; }
